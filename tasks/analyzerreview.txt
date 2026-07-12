@@ -1,0 +1,2 @@
+theia@theiadocker-ptthanatawee:/home/project$ curl -X GET "https://sentianalyzer.2c7myflhtty1.us-south.codeengine.appdomain.cloud/analyze/Fantastic%20services"
+{"sentiment": "positive"}
