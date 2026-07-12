@@ -27,7 +27,7 @@ try {
   });
   
 } catch (error) {
-  res.status(500).json({ error: 'Error fetching documents' });
+  console.error(error);
 }
 
 
@@ -47,10 +47,12 @@ app.get('/fetchReviews', async (req, res) => {
 });
 
 // Express route to fetch reviews by a particular dealer
-app.get('/fetchReviews/dealer/:id', async (req, res) => {
+app.get('/fetchReviews/dealer/:id?', async (req, res) => {
   try {
-    const documents = await Reviews.find({dealership: req.params.id});
-    res.json(documents);
+    const dealerId = req.params.id;
+    const query = dealerId ? { dealership: Number(dealerId) } : {};
+    const documents = await Reviews.find(query);
+    res.json({ status: 200, reviews: documents });
   } catch (error) {
     res.status(500).json({ error: 'Error fetching documents' });
   }
@@ -58,17 +60,36 @@ app.get('/fetchReviews/dealer/:id', async (req, res) => {
 
 // Express route to fetch all dealerships
 app.get('/fetchDealers', async (req, res) => {
-//Write your code here
+  try {
+    const documents = await Dealerships.find();
+    res.json({ status: 200, dealers: documents });
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching documents' });
+  }
 });
 
 // Express route to fetch Dealers by a particular state
-app.get('/fetchDealers/:state', async (req, res) => {
-//Write your code here
+app.get('/fetchDealers/:state?', async (req, res) => {
+  try {
+    const state = req.params.state;
+    const query = state && state !== 'All' ? { state: state } : {};
+    const documents = await Dealerships.find(query);
+    res.json({ status: 200, dealers: documents });
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching documents' });
+  }
 });
 
 // Express route to fetch dealer by a particular id
-app.get('/fetchDealer/:id', async (req, res) => {
-//Write your code here
+app.get('/fetchDealer/:id?', async (req, res) => {
+  try {
+    const dealerId = req.params.id;
+    const query = dealerId ? { id: Number(dealerId) } : {};
+    const documents = await Dealerships.find(query);
+    res.json({ status: 200, dealer: documents });
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching documents' });
+  }
 });
 
 //Express route to insert review
