@@ -1,0 +1,11 @@
+paulrgu2014@PaulsUbuntuOmen:~/coursework/xrwvm-fullstack_developer_capstone$  curl -i -X GET "http://127.0.0.1:8001/djangoapp/logout"
+HTTP/1.1 200 OK
+Date: Sun, 12 Jul 2026 22:29:18 GMT
+Server: WSGIServer/0.2 CPython/3.12.3
+Content-Type: application/json
+X-Frame-Options: DENY
+Content-Length: 16
+Vary: Cookie
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
