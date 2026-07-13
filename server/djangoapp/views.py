@@ -15,9 +15,8 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import CarMake, CarModel
-from .restapis import get_request, analyze_review_sentiments, post_review
-
-# from .populate import initiate
+from .restapis import get_request, analyze_review_sentiments, add_review as submit_review
+from .populate import initiate
 
 
 # Get an instance of a logger
@@ -113,7 +112,8 @@ def get_dealerships(request, state="All"):
         endpoint = "/fetchDealers"
     else:
         endpoint = "/fetchDealers/" + state
-    dealerships = get_request(endpoint)
+    response = get_request(endpoint) or {}
+    dealerships = response.get("dealers", []) if isinstance(response, dict) else response
     return JsonResponse({"status": 200, "dealers": dealerships})
 
 
@@ -122,11 +122,11 @@ def get_dealer_reviews(request, dealer_id):
     # if dealer id has been provided
     if dealer_id:
         endpoint = "/fetchReviews/dealer/" + str(dealer_id)
-        reviews = get_request(endpoint)
+        response = get_request(endpoint) or {}
+        reviews = response.get("reviews", []) if isinstance(response, dict) else response
         for review_detail in reviews:
-            response = analyze_review_sentiments(review_detail["review"])
-            print(response)
-            review_detail["sentiment"] = response["sentiment"]
+            sentiment = analyze_review_sentiments(review_detail.get("review", "")) or {}
+            review_detail["sentiment"] = sentiment.get("sentiment", "neutral")
         return JsonResponse({"status": 200, "reviews": reviews})
     else:
         return JsonResponse({"status": 400, "message": "Bad Request"})
@@ -136,12 +136,19 @@ def get_dealer_reviews(request, dealer_id):
 def get_dealer_details(request, dealer_id):
     if dealer_id:
         endpoint = "/fetchDealer/" + str(dealer_id)
-        dealership = get_request(endpoint)
+        response = get_request(endpoint) or {}
+        dealership = response.get("dealer", []) if isinstance(response, dict) else response
         return JsonResponse({"status": 200, "dealer": dealership})
     else:
         return JsonResponse({"status": 400, "message": "Bad Request"})
 
 
 # Create a `add_review` view to submit a review
-# def add_review(request):
-# ...
+@csrf_exempt
+def add_review(request):
+    try:
+        json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"status": 400, "message": "Invalid JSON payload"})
+
+    return submit_review(request)

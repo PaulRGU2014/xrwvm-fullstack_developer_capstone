@@ -1,7 +1,9 @@
 # Uncomment the imports below before you add the function code
-# import requests
+import requests
 import os
+import json
 from dotenv import load_dotenv
+from django.http import JsonResponse
 
 load_dotenv()
 
@@ -51,12 +53,15 @@ def post_review(data_dict):
 
 
 def add_review(request):
+    if request.method != "POST":
+        return JsonResponse({"status": 405, "message": "Method not allowed"})
+
     if request.user.is_anonymous == False:
         data = json.loads(request.body)
         try:
             response = post_review(data)
             return JsonResponse({"status": 200})
         except:
-            return JsonResponse({"status": 401, "message": "Error in posting review"})
+            return JsonResponse({"status": 500, "message": "Error in posting review"})
     else:
         return JsonResponse({"status": 403, "message": "Unauthorized"})
