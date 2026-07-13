@@ -24,9 +24,17 @@ class CarModel(models.Model):
         WAGON = "WAGON", "Wagon"
 
     # One CarMake can have many CarModel rows.
-    car_make = models.ForeignKey(CarMake, on_delete=models.CASCADE, related_name="models")
+    car_make = models.ForeignKey(
+        CarMake,
+        on_delete=models.CASCADE,
+        related_name="models",
+    )
     name = models.CharField(max_length=100)
-    type = models.CharField(max_length=10, choices=CarType.choices, default=CarType.SUV)
+    type = models.CharField(
+        max_length=10,
+        choices=CarType.choices,
+        default=CarType.SUV,
+    )
     year = models.IntegerField(
         default=2023,
         validators=[

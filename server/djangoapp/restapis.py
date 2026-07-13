@@ -7,6 +7,7 @@ from django.http import JsonResponse
 
 load_dotenv()
 
+
 def _env_or_default(key, default):
     value = os.getenv(key, "").strip()
     if not value or value.lower().startswith("your "):
@@ -24,7 +25,7 @@ def get_request(endpoint, **kwargs):
     params = ""
     if kwargs:
         for key, value in kwargs.items():
-            params = params + key + "=" + value + "&"
+            params = params + key + "=" + str(value) + "&"
 
     request_url = backend_url + endpoint + "?" + params
 
@@ -33,9 +34,10 @@ def get_request(endpoint, **kwargs):
         # Call get method of requests library with URL and parameters
         response = requests.get(request_url)
         return response.json()
-    except:
+    except requests.RequestException:
         # If any error occurs
         print("Network exception occurred")
+        return {}
 
 
 def analyze_review_sentiments(text):
@@ -55,20 +57,23 @@ def post_review(data_dict):
         response = requests.post(request_url, json=data_dict)
         print(response.json())
         return response.json()
-    except:
+    except requests.RequestException:
         print("Network exception occurred")
+        return {}
 
 
 def add_review(request):
     if request.method != "POST":
         return JsonResponse({"status": 405, "message": "Method not allowed"})
 
-    if request.user.is_anonymous == False:
+    if not request.user.is_anonymous:
         data = json.loads(request.body)
         try:
-            response = post_review(data)
+            post_review(data)
             return JsonResponse({"status": 200})
-        except:
-            return JsonResponse({"status": 500, "message": "Error in posting review"})
-    else:
-        return JsonResponse({"status": 403, "message": "Unauthorized"})
+        except (json.JSONDecodeError, requests.RequestException):
+            return JsonResponse(
+                {"status": 500, "message": "Error in posting review"}
+            )
+
+    return JsonResponse({"status": 403, "message": "Unauthorized"})
