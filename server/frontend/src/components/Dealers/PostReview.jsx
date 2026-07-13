@@ -8,18 +8,20 @@ import Header from '../Header/Header';
 const PostReview = () => {
   const [dealer, setDealer] = useState({});
   const [review, setReview] = useState("");
-  const [model, setModel] = useState();
+  const [model, setModel] = useState("");
   const [year, setYear] = useState("");
   const [date, setDate] = useState("");
   const [carmodels, setCarmodels] = useState([]);
+  const [carsLoadError, setCarsLoadError] = useState(false);
 
-  let curr_url = window.location.href;
-  let root_url = curr_url.substring(0,curr_url.indexOf("postreview"));
-  let params = useParams();
-  let id =params.id;
-  let dealer_url = root_url+`djangoapp/dealer/${id}`;
-  let review_url = root_url+`djangoapp/add_review`;
-  let carmodels_url = root_url+`djangoapp/get_cars`;
+  const params = useParams();
+  const id = params.id;
+  const { origin, pathname } = window.location;
+  const basePath = pathname.replace(/postreview\/\d+\/?$/, "");
+  const rootUrl = `${origin}${basePath}`;
+  const dealer_url = `${rootUrl}djangoapp/dealer/${id}`;
+  const review_url = `${rootUrl}djangoapp/add_review`;
+  const carmodels_url = `${rootUrl}djangoapp/get_cars`;
 
   const postreview = async ()=>{
     let name = sessionStorage.getItem("firstname")+" "+sessionStorage.getItem("lastname");
@@ -76,13 +78,25 @@ const PostReview = () => {
   }
 
   const get_cars = async ()=>{
-    const res = await fetch(carmodels_url, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    
-    let carmodelsarr = Array.from(retobj.CarModels)
-    setCarmodels(carmodelsarr)
+    try {
+      const res = await fetch(carmodels_url, {
+        method: "GET"
+      });
+
+      if (!res.ok) {
+        setCarsLoadError(true);
+        setCarmodels([]);
+        return;
+      }
+
+      const retobj = await res.json();
+      const carmodelsarr = Array.isArray(retobj.CarModels) ? retobj.CarModels : [];
+      setCarmodels(carmodelsarr);
+      setCarsLoadError(carmodelsarr.length === 0);
+    } catch (error) {
+      setCarsLoadError(true);
+      setCarmodels([]);
+    }
   }
   useEffect(() => {
     get_dealer();
@@ -101,16 +115,23 @@ const PostReview = () => {
       </div>
       <div className='input_field'>
       Car Make 
-      <select name="cars" id="cars" onChange={(e) => setModel(e.target.value)}>
-      <option value="" selected disabled hidden>Choose Car Make and Model</option>
-      {carmodels.map(carmodel => (
-          <option value={carmodel.CarMake+" "+carmodel.CarModel}>{carmodel.CarMake} {carmodel.CarModel}</option>
+      <select name="cars" id="cars" value={model} onChange={(e) => setModel(e.target.value)}>
+      <option value="" disabled hidden>
+        {carsLoadError ? "Unable to load car list" : "Choose Car Make and Model"}
+      </option>
+      {carmodels.map((carmodel) => (
+          <option
+            key={`${carmodel.CarMake}-${carmodel.CarModel}`}
+            value={carmodel.CarMake+" "+carmodel.CarModel}
+          >
+            {carmodel.CarMake} {carmodel.CarModel}
+          </option>
       ))}
       </select>        
       </div >
 
       <div className='input_field'>
-      Car Year <input type="int" onChange={(e) => setYear(e.target.value)} max={2023} min={2015}/>
+      Car Year <input type="number" onChange={(e) => setYear(e.target.value)} max={2023} min={2015}/>
       </div>
 
       <div>
