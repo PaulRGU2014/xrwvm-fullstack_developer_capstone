@@ -7,9 +7,16 @@ from django.http import JsonResponse
 
 load_dotenv()
 
-backend_url = os.getenv("backend_url", default="http://localhost:3030")
-sentiment_analyzer_url = os.getenv(
-    "sentiment_analyzer_url", default="http://localhost:5050/"
+def _env_or_default(key, default):
+    value = os.getenv(key, "").strip()
+    if not value or value.lower().startswith("your "):
+        return default
+    return value
+
+
+backend_url = _env_or_default("backend_url", "http://localhost:3030")
+sentiment_analyzer_url = _env_or_default(
+    "sentiment_analyzer_url", "http://localhost:5050/"
 )
 
 
